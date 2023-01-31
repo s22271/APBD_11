@@ -1,0 +1,15 @@
+﻿@page "/students"
+@inject IStudentService StudentService
+
+<h3>Students</h3>
+<StudentList Students="@StudentsList" />
+
+
+@code {
+    public List<Student> StudentsList { get; set; }
+
+    protected override void OnInitialized()
+    {
+        StudentsList = StudentService.GetStudents();
+    }
+}

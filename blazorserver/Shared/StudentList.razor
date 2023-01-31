@@ -1,0 +1,84 @@
+﻿@inject NavigationManager navigator
+@inject IJSRuntime js
+@inject IStudentService StudentService
+
+<table>
+    <thead>
+        <tr>
+            <th @onclick="@(() => Sort("Avatar"))">Avatar</th>
+            <th @onclick="@(() => Sort("FirstName"))">FirstName</th>
+            <th @onclick="@(() => Sort("LastName"))">LastName</th>
+            <th @onclick="@(() => Sort("Birthdate"))">Birthdate</th>
+            <th @onclick="@(() => Sort("Studies"))">Studies</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+    @foreach(var stud in Students)
+    {
+        <tr>
+            <td><img src="@stud.Avatar" alt="@(stud.FirstName) @(stud.LastName) Avatar" /></td>
+            <td>@stud.FirstName</td>
+            <td>@stud.LastName</td>
+            <td>@stud.Birthdate.ToShortDateString()</td>
+            <td>@stud.Studies</td>
+            <td>
+                <button @onclick="@(() => OpenDetails(stud.ID))">Open</button>
+                <button @onclick="@(() => Delete(stud.ID))">Delete</button>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+
+@code {
+
+    [Parameter]
+    public List<Student> Students { get; set; }
+
+    public KeyValuePair<string, bool> ColumnSort { get; set; } = new KeyValuePair<string, bool>("", false);
+
+        private void Sort(string columnName)
+    {
+
+        if(ColumnSort.Key == columnName)
+        {
+            ColumnSort = new KeyValuePair<string, bool>(columnName, !ColumnSort.Value);
+        } else
+        {
+            ColumnSort = new KeyValuePair<string, bool>(columnName, false);
+        }
+
+        if (ColumnSort.Value)
+        {
+            Students = SortListAsc(columnName);
+        } else
+        {
+            Students = SortListDesc(columnName);
+        }
+    }
+
+    private List<Student> SortListAsc(string columnName)
+    {
+        return Students.OrderBy(e => e.GetType().GetProperty(columnName).GetValue(e, null)).ToList();
+    }
+
+    private List<Student> SortListDesc(string columnName)
+    {
+        return Students.OrderByDescending(e => e.GetType().GetProperty(columnName).GetValue(e, null)).ToList();
+    }
+
+    
+    private void OpenDetails(int id)
+    {
+        navigator.NavigateTo("/students/" + id);
+    }
+
+    private async Task Delete(int id)
+    {
+        if (await js.InvokeAsync<bool>("confirm", "Are you sure?"))
+        {
+            StudentService.RemoveStudent(id);
+        }
+    }
+}
